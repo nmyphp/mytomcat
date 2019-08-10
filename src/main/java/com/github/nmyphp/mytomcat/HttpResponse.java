@@ -21,42 +21,37 @@ public class HttpResponse {
     private OutputStream outputStream;
     private StatusCode statusCode;
     private ContentType contentType;
-    private Charset charset = Charset.forName("UTF-8");
+    private String charsetName = "UTF-8";
 
     public HttpResponse(OutputStream outputStream, ContentType contentType) {
         this.outputStream = outputStream;
         this.contentType = contentType;
     }
 
-    public HttpResponse(OutputStream outputStream, ContentType contentType, Charset charset) {
+    public HttpResponse(OutputStream outputStream, ContentType contentType, String charsetName) {
         this.outputStream = outputStream;
         this.contentType = contentType;
-        this.charset = charset;
+        this.charsetName = charsetName;
     }
 
-    public void write(String content) {
-        try {
-            StringBuilder builder = new StringBuilder();
-            builder.append(statusCode)
-                .append("\n")
-                .append(contentType)
-                .append("\n");
-            if (contentType == ContentType.TEXT) {
-                builder.append("<html><body>")
-                    .append(content)
-                    .append("</body></html>");
-            } else if (contentType == ContentType.JSON) {
-                builder.append(content);
-            }
-            outputStream.write(builder.toString().getBytes(charset));
-        } catch (Exception ex) {
-            log.error("Occur exception when write response. ", ex);
-        } finally {
-            try {
-                outputStream.close();
-            } catch (IOException ex) {
-                // ignore
-            }
+    public void write(String content) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        builder.append(statusCode)
+            .append("\n")
+            .append(contentType)
+            .append(";charset=")
+            .append(charsetName)
+            .append("\n\n");
+        if (contentType == ContentType.TEXT) {
+            builder.append("<html><body>")
+                .append(content)
+                .append("</body></html>");
+        } else if (contentType == ContentType.JSON) {
+            builder.append(content);
         }
+
+        outputStream.write(builder.toString().getBytes());
+        outputStream.flush();
+        log.debug("Response: \n\t{}", builder.toString());
     }
 }

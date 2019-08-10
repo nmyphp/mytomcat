@@ -4,6 +4,7 @@ import com.github.nmyphp.mytomcat.Dispatcher;
 import com.github.nmyphp.mytomcat.HttpRequest;
 import com.github.nmyphp.mytomcat.HttpResponse;
 import com.github.nmyphp.mytomcat.StatusCode;
+import com.github.nmyphp.mytomcat.util.ConfigUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,34 +20,35 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Tomcat {
 
-    private Integer port = 8080;
+    private static int port;
 
     public static void main(String[] args) throws IOException {
+        port = Integer.valueOf(ConfigUtil.properties.getProperty("port", "8080"));
         new Tomcat().start();
     }
 
     public void start() throws IOException {
-        ServerSocket server = new ServerSocket(port);
-        Dispatcher dispatcher = new Dispatcher();
+        ServerSocket server = null;
         System.out.println("Tomcat is started! [" + port + "]");
         try {
+            server = new ServerSocket(port);
+            Dispatcher dispatcher = new Dispatcher();
             while (true) {
                 Socket socket = server.accept();
-                try {
-                    InputStream inputStream = socket.getInputStream();
-                    OutputStream outputStream = socket.getOutputStream();
-                    HttpRequest req = new HttpRequest(inputStream);
-                    HttpResponse res = new HttpResponse(outputStream, req.getContentType(), req.getCharsetName());
-                    res.setStatusCode(StatusCode.OK);
-                    dispatcher.dispatch(req, res);
-                } catch (Exception ex) {
-                    log.error("", ex);
-                } finally {
-                    socket.close();
-                }
+                InputStream inputStream = socket.getInputStream();
+                OutputStream outputStream = socket.getOutputStream();
+                HttpRequest req = new HttpRequest(inputStream);
+                HttpResponse res = new HttpResponse(outputStream, req.getContentType(), req.getCharsetName());
+                res.setStatusCode(StatusCode.OK);
+                dispatcher.dispatch(req, res);
+                inputStream.close();
+                outputStream.close();
+                socket.close();
             }
         } finally {
-            server.close();
+            if (null != server) {
+                server.close();
+            }
         }
     }
 }

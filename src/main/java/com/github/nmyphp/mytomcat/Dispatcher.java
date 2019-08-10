@@ -22,7 +22,7 @@ public class Dispatcher {
         boolean match = false;
         try {
             String uri = httpRequest.getUri();
-            if (servletConfig.getIgnoreUri().contains(uri)) {
+            if (servletConfig.getIgnoreUri().contains(uri) || null == uri || uri.trim().length() == 0) {
                 return;
             }
             for (ServletMapping sm : servletConfig.getServletMappings()) {
@@ -40,7 +40,11 @@ public class Dispatcher {
         } catch (IOException ex) {
             log.error("Occur Exception when dispatch. ", ex);
             httpResponse.setStatusCode(StatusCode.SERVER_ERROR);
-            httpResponse.write(ex.getMessage());
+            try {
+                httpResponse.write(ex.getMessage());
+            } catch (IOException e) {
+                log.error("", e);
+            }
         }
     }
 }

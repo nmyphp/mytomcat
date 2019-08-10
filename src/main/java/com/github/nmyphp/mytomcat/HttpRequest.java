@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
@@ -24,7 +23,7 @@ public class HttpRequest {
 
     private String uri;
     private HttpMethod method;
-    private Charset charsetName;
+    private String charsetName;
     private ContentType contentType;
     private Map<String, String> parameters = new HashMap<>(10);
 
@@ -51,10 +50,9 @@ public class HttpRequest {
                 }
                 parameters.put(entry[0], value);
             }
-            charsetName = Charset.forName(parameters.getOrDefault("Accept-Charset", "UTF-8"));
-            contentType = ContentType.match(parameters.getOrDefault("Content-Type", "text/html"));
-            log.debug("Receive a http request:\n\tMethod:{}\n\tURI:{}\n\tParameters:{}",
-                method, uri, parameters);
+            charsetName = parameters.getOrDefault("Accept-Charset", "UTF-8");
+            contentType = ContentType.match(parameters.getOrDefault("Accept", "text/html"));
+            log.debug("Receive a http request:\n\tMethod:{}\n\tURI:{}", method, uri);
         }
     }
 }
